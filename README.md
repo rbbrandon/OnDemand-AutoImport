@@ -4,7 +4,7 @@ This script will read a valid (see below) OnDemand Csv Student Import file, chec
 
 ## Getting Started
 ### Prerequisites
-* SQL Server PowerShell Module (SQLPS)
+* SQL Server PowerShell Module (SQLPS) (already installed on OnDemand servers)
 * PowerShell v3.0+
 * Script Run "As Administrator"
 * Script Run Under Account with SQL Database Read/Write Access on the On Demand Server (e.g. "School Admin" account)
