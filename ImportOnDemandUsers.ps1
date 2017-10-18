@@ -12,7 +12,7 @@ student_code,first_name,middle_name,surname,gender,date_of_birth,LBOTE,ATSI,disa
 .NOTES
 Author      : Robert Brandon
 Created     : 10/10/2017
-Last Edited : 13/10/2017
+Last Edited : 18/10/2017
 Requires    : SQL Server PowerShell Module (SQLPS);
               PowerShell v3.0+;
               Script Run "As Administrator";
@@ -71,44 +71,42 @@ Param(
 # Define main script function.
 Function Main ($CsvFile, $SchoolID)
 {
-    Write-Host
-    Write-Host "******************************"
-    Write-Host "    On Demand CSV Importer    "
-    Write-Host "******************************"
-    Write-host "(Runtime: $((Get-Date).ToString("dd/MM/yyyy HH:mm:ss")))"
-    Write-host
+    Write-Output "`r`n******************************"
+    Write-Output "    On Demand CSV Importer    "
+    Write-Output "******************************"
+    Write-Output "(Runtime: $((Get-Date).ToString("dd/MM/yyyy HH:mm:ss")))`r`n"
 
     #region Import all required modules
-    Write-Host " Importing modules"
+    Write-Output " Importing modules"
     Push-Location
     try {
         Import-Module sqlps -DisableNameChecking
-        Write-Host -ForegroundColor DarkGreen " - SQLPS Loaded."
+        Write-Green " - SQLPS Loaded."
     }
     catch {
-        Write-Host -ForegroundColor Red " ERROR: Failed to load SQLPS module"
-        Write-Host -ForegroundColor Red "        $($_.Exception.Message)"
+        Write-Red " ERROR: Failed to load SQLPS module"
+        Write-Red "        $($_.Exception.Message)"
         return
     }
     Pop-Location
     #endregion
 
     #region Get CSV information
-    Write-Host " Reading OnDemand.csv..."
+    Write-Output " Reading OnDemand.csv..."
     try {
         $ImportedCsv = Import-Csv $CsvFile
 
         Write-Verbose "  $($ImportedCsv | Measure-Object | Select-Object -expand count) Records Read."
-        Write-Host -ForegroundColor DarkGreen " - Done."
+        Write-Green " - Done."
     } catch {
-        Write-Host -ForegroundColor Red "  ERROR: Failed to read $CsvFile"
-        Write-Host -ForegroundColor Red "         $($_.Exception.Message)"
+        Write-Red "  ERROR: Failed to read $CsvFile"
+        Write-Red "         $($_.Exception.Message)"
         return
     }
     #endregion
 
     #region Get required info from DB
-    Write-Host " Retrieving Required ""On Demand"" Information from the local database..."
+    Write-Output " Retrieving Required ""On Demand"" Information from the local database..."
 
     #region Get School Information
     try {
@@ -116,8 +114,8 @@ Function Main ($CsvFile, $SchoolID)
 
         $Schools = Invoke-SqlCmd -Hostname localhost -Database AIM -Query "SELECT SCHL_ID AS SCHOOL_ID, SCHL_NAME AS NAME, LCTN_ADRS_SBRB AS LOCATION FROM SCHOOL"
         if ($null -eq $Schools) {
-            Write-Host -ForegroundColor Red "  ERROR: Could not obtain School information from the local database."
-            Write-Host -ForegroundColor Red "         Script must be run on the On Demand server under an account that has write access to the SQL database."
+            Write-Red "  ERROR: Could not obtain School information from the local database."
+            Write-Red "         Script must be run on the On Demand server under an account that has write access to the SQL database."
             return
         }
 
@@ -126,22 +124,22 @@ Function Main ($CsvFile, $SchoolID)
             if ($Schools -is [System.Data.DataRow]) {
                 $SchoolID = $Schools.SCHOOL_ID
             } else {
-                Write-Host -ForegroundColor Red "  ERROR: Could not obtain the SchoolID. More than 1 school was found. please specify the SchoolID."
-                Write-Host -ForegroundColor Red "         Available Schools:  $(($SchoolID | Format-Table -AutoSize | Out-String).TrimEnd())"
+                Write-Red "  ERROR: Could not obtain the SchoolID. More than 1 school was found. please specify the SchoolID."
+                Write-Red "         Available Schools:  $(($SchoolID | Format-Table -AutoSize | Out-String).TrimEnd())"
                 return
             }
         } elseif ($Schools.SCHOOL_ID -notcontains $SchoolID) {
             # Supplied SchoolID is not in the database.
-            Write-Host -ForegroundColor Red "  ERROR: Invalid SchoolID."
-            Write-Host -ForegroundColor Red "         Available Schools:  $(($Schools | Format-Table -AutoSize | Out-String).TrimEnd())"
+            Write-Red "  ERROR: Invalid SchoolID."
+            Write-Red "         Available Schools:  $(($Schools | Format-Table -AutoSize | Out-String).TrimEnd())"
             return
         } else {
             # Supplied SchoolID is valid.
             Write-Verbose "  Found school with ID ""$SchoolID"" in the local database."
         }
     } catch {
-        Write-Host -ForegroundColor Red "  ERROR: Could not obtain the SchoolID."
-        Write-Host -ForegroundColor Red "         Script must be run on the On Demand server under an account that has write access to the SQL database."
+        Write-Red "  ERROR: Could not obtain the SchoolID."
+        Write-Red "         Script must be run on the On Demand server under an account that has write access to the SQL database."
         return
     }
     #endregion
@@ -151,8 +149,8 @@ Function Main ($CsvFile, $SchoolID)
     $YearLevels = Invoke-SqlCmd -Hostname localhost -Database AIM -Query "SELECT YEAR_LVL_ID, YEAR_LVL_DSCRPTN FROM YEAR_LEVEL"
     
     if ($null -eq $YearLevels) {
-        Write-Host -ForegroundColor Red "  ERROR: Could not obtain Year Level information from the local database."
-        Write-Host -ForegroundColor Red "         Script must be run on the On Demand server under an account that has write access to the SQL database."
+        Write-Red "  ERROR: Could not obtain Year Level information from the local database."
+        Write-Red "         Script must be run on the On Demand server under an account that has write access to the SQL database."
         return
     }
     #endregion
@@ -170,11 +168,11 @@ Function Main ($CsvFile, $SchoolID)
     }
     #endregion
 
-    Write-Host -ForegroundColor DarkGreen " - Done."
+    Write-Green " - Done."
     #endregion
 
     #region Process CSV Records
-    Write-Host " Processing CSV Records..."
+    Write-Output " Processing CSV Records..."
     $Updates = 0
     $Inserts = 0
     $Errors  = 0
@@ -183,7 +181,7 @@ Function Main ($CsvFile, $SchoolID)
         #region Validate record values.
         $Invalid = CheckRecordFail $Record
         if ($Invalid -ne $false) {
-            Write-Host -ForegroundColor Red $Invalid
+            Write-Red $Invalid
             $Errors++
             Continue
         }
@@ -206,7 +204,7 @@ Function Main ($CsvFile, $SchoolID)
         if ($YearLevels.YEAR_LVL_DSCRPTN -contains $Record.year_level) {
             $Year_Lvl_Id = $YearLevels | Where-Object { $_.YEAR_LVL_DSCRPTN -eq $Record.year_level }  | select -ExpandProperty YEAR_LVL_ID
         } else {
-            Write-Host -ForegroundColor Red """$($Record.year_level)"" is not a valid year level."
+            Write-Red """$($Record.year_level)"" is not a valid year level."
             Continue
         }
     
@@ -235,7 +233,7 @@ Function Main ($CsvFile, $SchoolID)
                 $ExistingStudent.HOME_GRP_NAME -ne $Record.home_group)
             {
                 # Student information from CSV is different, therefore student requires updating.
-                Write-Host "  Updating $($Record.first_name) $($Record.surname) ($($Record.student_code))'s Student Information..."
+                Write-Output "  Updating $($Record.first_name) $($Record.surname) ($($Record.student_code))'s Student Information..."
 
                 $SQLQuery = "UPDATE STUDENT "`
                           + "SET YEAR_LVL_ID = $Year_Lvl_Id, "`
@@ -260,9 +258,9 @@ Function Main ($CsvFile, $SchoolID)
                 try {
                     Invoke-SqlCmd -Hostname localhost -Database AIM -Query $SQLQuery
                     $Updates += 1
-                    Write-Host -ForegroundColor DarkGreen "  - Done."
+                    Write-Green "  - Done."
                 } catch {
-                    Write-Host -ForegroundColor Red "ERROR: Command failed: $SQLQuery"
+                    Write-Red "ERROR: Command failed: $SQLQuery"
                 }
             } else {
                 # Student is in the database, and their details match the CSV. Do nothing.
@@ -270,7 +268,7 @@ Function Main ($CsvFile, $SchoolID)
             }
         } else {
             # Student doesn't exist in the database, therefore must be a new student. Add the student to the database.
-            Write-Host "  Adding $($Record.first_name) $($Record.surname) ($($Record.student_code))'s Student Information..."
+            Write-Output "  Adding $($Record.first_name) $($Record.surname) ($($Record.student_code))'s Student Information..."
 
             # Prepare the SQL Query to run.
             $SQLQuery = "INSERT INTO STUDENT (STDNT_LID, YEAR_LVL_ID, SCHL_ID, STDNT_XID, STDNT_EXTRNL_XID, STDNT_FRST_NAME, STDNT_MDL_NAME, "`
@@ -287,37 +285,36 @@ Function Main ($CsvFile, $SchoolID)
                 Invoke-SqlCmd -Hostname localhost -Database AIM -Query $SQLQuery
                 $Inserts += 1
                 $NextStudentID += 1
-                Write-Host -ForegroundColor DarkGreen "  - Done."
+                Write-Green "  - Done."
             } catch {
-                Write-Host -ForegroundColor Red "ERROR: Command failed: $SQLQuery"
+                Write-Red "ERROR: Command failed: $SQLQuery"
             }
         }
         #endregion
     }
 
-    Write-Host -ForegroundColor DarkGreen " - Done."
+    Write-Green " - Done."
     #endregion
 
     #region Display Results
-    Write-Host
-    Write-Host "$($ImportedCsv.Count) total records checked:"
+    Write-Output "`r`n$($ImportedCsv.Count) total records checked:"
     if ($Updates -gt 0) {
-        Write-Host -ForegroundColor DarkGreen "- $Updates Existing Student$(if ($Updates -ne 1) { "s" }) Updated."
+        Write-Green "- $Updates Existing Student$(if ($Updates -ne 1) { "s" }) Updated."
     } else {
-        Write-Host "- 0 Existing students updated."
+        Write-Output "- 0 Existing students updated."
     }
 
     if ($Inserts -gt 0) {
-        Write-Host -ForegroundColor DarkGreen "- $Inserts New Student$(if ($Inserts -ne 1) { "s" }) Added."
+        Write-Green "- $Inserts New Student$(if ($Inserts -ne 1) { "s" }) Added."
     } else {
-        Write-Host "- 0 New students added."
+        Write-Output "- 0 New students added."
     }
 
 
     if ($Errors -gt 0) {
-        Write-Host -ForegroundColor Red "- $Errors Record$(if ($Errors -ne 1) { "s" }) ignored due to errors. :("
+        Write-Red "- $Errors Record$(if ($Errors -ne 1) { "s" }) ignored due to errors. :("
     } else {
-        Write-Host -ForegroundColor DarkGreen "- 0 Records with errors. :)"
+        Write-Green "- 0 Records with errors. :)"
     }
     #endregion
 }
@@ -401,6 +398,21 @@ Function CheckRecordFail ($Record) {
     } else {
         return $false
     }
+}
+
+Function Write-Color ($Message, $Color) {
+    $t = $host.ui.RawUI.ForegroundColor
+    $host.ui.RawUI.ForegroundColor = $Color
+    Write-Output $Message
+    $host.ui.RawUI.ForegroundColor = $t
+}
+
+Function Write-Red ($Message) {
+    Write-Color $Message "Red"
+}
+
+Function Write-Green ($Message) {
+    Write-Color $Message "DarkGreen"
 }
 #endregion
 
