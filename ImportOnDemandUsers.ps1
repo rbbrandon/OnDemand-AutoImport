@@ -149,8 +149,8 @@ Function Main ($CsvFile, $SchoolID)
     $YearLevels = Invoke-SqlCmd -Hostname localhost -Database AIM -Query "SELECT YEAR_LVL_ID, YEAR_LVL_DSCRPTN FROM YEAR_LEVEL"
     
     if ($null -eq $YearLevels) {
-        Write-Color "  ERROR: Could not obtain Year Level information from the local database."
-        Write-Color "         Script must be run on the On Demand server under an account that has write access to the SQL database."
+        Write-Red "  ERROR: Could not obtain Year Level information from the local database."
+        Write-Red "         Script must be run on the On Demand server under an account that has write access to the SQL database."
         return
     }
     #endregion
