@@ -71,10 +71,10 @@ Param(
 # Define main script function.
 Function Main ($CsvFile, $SchoolID)
 {
-    Write-Output "`r`n******************************"
-    Write-Output "    On Demand CSV Importer    "
-    Write-Output "******************************"
-    Write-Output "(Runtime: $((Get-Date).ToString("dd/MM/yyyy HH:mm:ss")))`r`n"
+    Write-Color "`r`n******************************"
+    Write-Color "    On Demand CSV Importer    "
+    Write-Color "******************************"
+    Write-Color "(Runtime: $((Get-Date).ToString("dd/MM/yyyy HH:mm:ss")))`r`n"
 
     #region Import all required modules
     Write-Output " Importing modules"
@@ -92,7 +92,7 @@ Function Main ($CsvFile, $SchoolID)
     #endregion
 
     #region Get CSV information
-    Write-Output " Reading OnDemand.csv..."
+    Write-Color " Reading OnDemand.csv..."
     try {
         $ImportedCsv = Import-Csv $CsvFile
 
@@ -106,7 +106,7 @@ Function Main ($CsvFile, $SchoolID)
     #endregion
 
     #region Get required info from DB
-    Write-Output " Retrieving Required ""On Demand"" Information from the local database..."
+    Write-Color " Retrieving Required ""On Demand"" Information from the local database..."
 
     #region Get School Information
     try {
@@ -149,8 +149,8 @@ Function Main ($CsvFile, $SchoolID)
     $YearLevels = Invoke-SqlCmd -Hostname localhost -Database AIM -Query "SELECT YEAR_LVL_ID, YEAR_LVL_DSCRPTN FROM YEAR_LEVEL"
     
     if ($null -eq $YearLevels) {
-        Write-Red "  ERROR: Could not obtain Year Level information from the local database."
-        Write-Red "         Script must be run on the On Demand server under an account that has write access to the SQL database."
+        Write-Color "  ERROR: Could not obtain Year Level information from the local database."
+        Write-Color "         Script must be run on the On Demand server under an account that has write access to the SQL database."
         return
     }
     #endregion
@@ -172,7 +172,7 @@ Function Main ($CsvFile, $SchoolID)
     #endregion
 
     #region Process CSV Records
-    Write-Output " Processing CSV Records..."
+    Write-Color " Processing CSV Records..."
     $Updates = 0
     $Inserts = 0
     $Errors  = 0
@@ -233,7 +233,7 @@ Function Main ($CsvFile, $SchoolID)
                 $ExistingStudent.HOME_GRP_NAME -ne $Record.home_group)
             {
                 # Student information from CSV is different, therefore student requires updating.
-                Write-Output "  Updating $($Record.first_name) $($Record.surname) ($($Record.student_code))'s Student Information..."
+                Write-Color "  Updating $($Record.first_name) $($Record.surname) ($($Record.student_code))'s Student Information..."
 
                 $SQLQuery = "UPDATE STUDENT "`
                           + "SET YEAR_LVL_ID = $Year_Lvl_Id, "`
@@ -268,7 +268,7 @@ Function Main ($CsvFile, $SchoolID)
             }
         } else {
             # Student doesn't exist in the database, therefore must be a new student. Add the student to the database.
-            Write-Output "  Adding $($Record.first_name) $($Record.surname) ($($Record.student_code))'s Student Information..."
+            Write-Color "  Adding $($Record.first_name) $($Record.surname) ($($Record.student_code))'s Student Information..."
 
             # Prepare the SQL Query to run.
             $SQLQuery = "INSERT INTO STUDENT (STDNT_LID, YEAR_LVL_ID, SCHL_ID, STDNT_XID, STDNT_EXTRNL_XID, STDNT_FRST_NAME, STDNT_MDL_NAME, "`
@@ -301,13 +301,13 @@ Function Main ($CsvFile, $SchoolID)
     if ($Updates -gt 0) {
         Write-Green "- $Updates Existing Student$(if ($Updates -ne 1) { "s" }) Updated."
     } else {
-        Write-Output "- 0 Existing students updated."
+        Write-Color "- 0 Existing students updated."
     }
 
     if ($Inserts -gt 0) {
         Write-Green "- $Inserts New Student$(if ($Inserts -ne 1) { "s" }) Added."
     } else {
-        Write-Output "- 0 New students added."
+        Write-Color "- 0 New students added."
     }
 
 
@@ -400,19 +400,30 @@ Function CheckRecordFail ($Record) {
     }
 }
 
-Function Write-Color ($Message, $Color) {
-    $t = $host.ui.RawUI.ForegroundColor
-    $host.ui.RawUI.ForegroundColor = $Color
-    Write-Output $Message
-    $host.ui.RawUI.ForegroundColor = $t
+function Write-Color([String[]]$Text, [ConsoleColor[]]$Color = @()) {
+    if ($Color.Count -ge $Text.Count) {
+        for ($i = 0; $i -lt $Text.Length; $i++) {
+            Write-Host $Text[$i] -ForegroundColor $Color[$i] -NoNewLine
+        } 
+    } else {
+        for ($i = 0; $i -lt $Color.Length ; $i++) {
+            Write-Host $Text[$i] -ForegroundColor $Color[$i] -NoNewLine
+        }
+        for ($i = $Color.Length; $i -lt $Text.Length; $i++) {
+            Write-Host $Text[$i] -NoNewLine
+        }
+    }
+
+    # Write-Host ends its lines with "`n" (unix/shell format). So by writing "`r" first it'll end the line with "`r`n", which is Windows format.
+    Write-Host "`r"
 }
 
 Function Write-Red ($Message) {
-    Write-Color $Message "Red"
+    Write-Color $Message -Color "Red"
 }
 
 Function Write-Green ($Message) {
-    Write-Color $Message "DarkGreen"
+    Write-Color $Message -Color "DarkGreen"
 }
 #endregion
 
