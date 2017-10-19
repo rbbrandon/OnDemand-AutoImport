@@ -12,7 +12,7 @@ student_code,first_name,middle_name,surname,gender,date_of_birth,LBOTE,ATSI,disa
 .NOTES
 Author      : Robert Brandon
 Created     : 10/10/2017
-Last Edited : 18/10/2017
+Last Edited : 20/10/2017
 Requires    : SQL Server PowerShell Module (SQLPS);
               PowerShell v3.0+;
               Script Run "As Administrator";
@@ -188,6 +188,7 @@ Function Main ($CsvFile, $SchoolID)
         #endregion
 
         #region "Clean" record values for SQL.
+        # Prevent SQL Injection:
         $Record | Foreach-Object {
             $_.first_name = $_.first_name.Replace("'", "").Replace("""", "");
             $_.middle_name = $_.middle_name.Replace("'", "").Replace("""", "");
@@ -196,18 +197,42 @@ Function Main ($CsvFile, $SchoolID)
             $_.home_group = $_.home_group.Replace("'", "").Replace("""", "");
             $_.year_level = $_.year_level.Replace("'", "").Replace("""", "");
         }
+
+        # Set HG and middle name if not specified
         if ($null -eq $Record.home_group) { $Record.home_group = "" }
         if ($null -eq $Record.middle_name) { $Record.middle_name = "" }
 
-        $Birth_Date = [datetime]::ParseExact($Record.date_of_birth, "d/MM/yyyy", $null).ToString("yyyyMMdd HH:mm:ss")
+        # Reformat birthdate into a value compatible with SQL.
+        try {
+            # try "1/01/2017" format.
+            $Birth_Date = [datetime]::ParseExact($Record.date_of_birth, "d/MM/yyyy", $null).ToString("yyyyMMdd HH:mm:ss")
+        } catch {
+            # Try "Jan 1 2017" format.
+            $Birth_Date = [datetime]::ParseExact($Record.date_of_birth, "MMM d yyyy", $null).ToString("yyyyMMdd HH:mm:ss")
+        }
 
+        # Clean bool values to a "0" or "1".
+        $Record.LBOTE             = Clean-Bool $Record.LBOTE
+        $Record.ATSI              = Clean-Bool $Record.LBOTE
+        $Record.disability_status = Clean-Bool $Record.LBOTE
+        $Record.EMA               = Clean-Bool $Record.LBOTE
+        $Record.ESL               = Clean-Bool $Record.LBOTE
+
+        # Clean gender value to what the DB is expecting ("MALE"/"FEMAL")
+        $Record.gender = Clean-Gender $Record.gender
+
+        # Clean year level value to what the DB is expecting (e.g. "01" instead of "1")
+        $Record.year_level = Clean-Year $Record.year_level
+
+        # Get year level ID
         if ($YearLevels.YEAR_LVL_DSCRPTN -contains $Record.year_level) {
             $Year_Lvl_Id = $YearLevels | Where-Object { $_.YEAR_LVL_DSCRPTN -eq $Record.year_level }  | select -ExpandProperty YEAR_LVL_ID
         } else {
             Write-Red """$($Record.year_level)"" is not a valid year level."
             Continue
         }
-    
+        
+        # Get the current datetime.
         $Now = (Get-Date).ToString("yyyyMMdd HH:mm:ss")
         #endregion
         
@@ -330,30 +355,30 @@ Function EndScript {
 }
 
 Function CheckRecordFail ($Record) {
-    $ValidBool        = "0", "1"
-    $ValidGenders     = "MALE", "FEMAL"
-    $ValidYearLevels  = "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "F", "UG"
+    $ValidBool        = "0", "N", "No", "F", "False", "1", "Y", "Yes", "T", "True"
+    $ValidGenders     = "M", "MALE", "F", "FEMAL", "FEMALE"
+    $ValidYearLevels  = "01", "02", "03", "04", "05", "06", "07", "08", "09", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "F", "UG"
     $ValidationFailed = $false
     $ErrorMsg         = ""
 
     if ([string]::IsNullOrEmpty($Record.ATSI) -or $ValidBool -notcontains $Record.ATSI) {
-        $ErrorMsg += "`r`nERROR: ""ATSI"" (Aboriginal or Torres Strait Islander) flag must be either a 0, or 1."
+        $ErrorMsg += "`r`nERROR: ""ATSI"" (Aboriginal or Torres Strait Islander) flag must be one of the following values: ""$($ValidBool -join '", "')""."
         $ValidationFailed = $true
     }
     if ([string]::IsNullOrEmpty($Record.disability_status) -or $ValidBool -notcontains $Record.disability_status) {
-        $ErrorMsg += "`r`nERROR: ""disability_status"" flag must be either a 0, or 1."
+        $ErrorMsg += "`r`nERROR: ""disability_status"" flag must be one of the following values: ""$($ValidBool -join '", "')"".."
         $ValidationFailed = $true
     }
     if ([string]::IsNullOrEmpty($Record.EMA) -or $ValidBool -notcontains $Record.EMA) {
-        $ErrorMsg += "`r`nERROR: ""EMA"" (Education Maintenance Allowance) flag must be either a 0, or 1."
+        $ErrorMsg += "`r`nERROR: ""EMA"" (Education Maintenance Allowance) flag must be one of the following values: ""$($ValidBool -join '", "')""."
         $ValidationFailed = $true
     }
     if ([string]::IsNullOrEmpty($Record.ESL) -or $ValidBool -notcontains $Record.ESL) {
-        $ErrorMsg += "`r`nERROR: ""ESL"" (English as a Second Language) flag must be either a 0, or 1."
+        $ErrorMsg += "`r`nERROR: ""ESL"" (English as a Second Language) flag must be one of the following values: ""$($ValidBool -join '", "')""."
         $ValidationFailed = $true
     }
     if ([string]::IsNullOrEmpty($Record.LBOTE) -or $ValidBool -notcontains $Record.LBOTE) {
-        $ErrorMsg += "`r`nERROR: ""LBOTE"" (Language Background Other Than English) flag must be either a 0, or 1."
+        $ErrorMsg += "`r`nERROR: ""LBOTE"" (Language Background Other Than English) flag must be one of the following values: ""$($ValidBool -join '", "')""."
         $ValidationFailed = $true
     }
     if ([string]::IsNullOrEmpty($Record.student_code) -or $Record.student_code.Length -gt 20) {
@@ -386,7 +411,13 @@ Function CheckRecordFail ($Record) {
     }
     
     try {
-        $Birth_Date = [datetime]::ParseExact($Record.date_of_birth, "d/MM/yyyy", $null)
+        try {
+            # try "1/01/2017" format.
+            $Birth_Date = [datetime]::ParseExact($Record.date_of_birth, "d/MM/yyyy", $null)
+        } catch {
+            # Try "Jan 1 2017" format.
+            $Birth_Date = [datetime]::ParseExact($Record.date_of_birth, "MMM d yyyy", $null)
+        }
     } catch {
         $ErrorMsg += "`r`nERROR: date_of_birth ""$($Record.date_of_birth)"" is not a valid date. Must be in the format ""d/MM/yyyy""."
         $ValidationFailed = $true
@@ -397,6 +428,44 @@ Function CheckRecordFail ($Record) {
         return $ErrorMsg
     } else {
         return $false
+    }
+}
+
+Function Clean-Bool ($Value) {
+    switch ($Value) {
+        "N"     { "0"; break;}
+        "No"    { "0"; break;}
+        "F"     { "0"; break;}
+        "False" { "0"; break;}
+        "Y"     { "1"; break;}
+        "Yes"   { "1"; break;}
+        "T"     { "1"; break;}
+        "True"  { "1"; break;}
+        default { $Value }
+    }
+}
+
+Function Clean-Gender ($Value) {
+    switch ($Value) {
+        "M"      { "MALE"; break;}
+        "FEMALE" { "FEMAL"; break;}
+        "F"      { "FEMAL"; break;}
+        default  { $Value }
+    }
+}
+
+Function Clean-Year ($Value) {
+    switch ($Value) {
+        "1" { "01"; break;}
+        "2" { "02"; break;}
+        "3" { "03"; break;}
+        "4" { "04"; break;}
+        "5" { "05"; break;}
+        "6" { "06"; break;}
+        "7" { "07"; break;}
+        "8" { "08"; break;}
+        "9" { "09"; break;}
+        default { $Value }
     }
 }
 
