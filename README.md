@@ -61,11 +61,11 @@ powershell.exe -ExecutionPolicy Bypass -Command "& 'c:\scripts\ImportOnDemandUse
 ```
 
 ## Notes:
-* The script only checks for student code (STDNT_XID) to determine a match for existing students.
-* I’m not 100% sure of the first "STDNT_LID" value, but from looking at my own database, the first record seems to start at "[SCHL_ID]0000001000" (e.g. "13850000001000"). Why "1000" at the end? No idea, but that’s my first record.
-* The script sets the deleted indicator (DLTD_IND) to FALSE for all imported users, as there is no "ACTV/LEFT" flags in the CSV (which I assume that flag is for). I could set any user not in the CSV to TRUE, but I don’t think it matters.
-* "LAST_UPDATED_SQNC" I assume is just a counter for how many times the record has been updated, starting at "1" for the initial add, and incrementing with each update to the record.
-* It just uses an ID of "0" for "CREATED_USER_ID"/"LAST_UPDATED_USER_ID", as that’s what my records have.
+* The script only checks for student code (`STDNT_XID`) to determine a match for existing students.
+* I’m not 100% sure of the first "`STDNT_LID`" value, but from looking at my own database, the first record seems to start at "`[SCHL_ID]0000001000`" (e.g. "`13850000001000`"). Why "`1000`" at the end? No idea, but that’s my first record.
+* The script sets the deleted indicator (`DLTD_IND`) to `FALSE` for all imported users, as there is no "`ACTV`/`LEFT`" flags in the CSV (which I assume that flag is for). I could set any user not in the CSV to `TRUE`, but I don’t think it matters.
+* "`LAST_UPDATED_SQNC`" I assume is just a counter for how many times the record has been updated, starting at "1" for the initial add, and incrementing with each update to the record.
+* It just uses an ID of "0" for "`CREATED_USER_ID`"/"`LAST_UPDATED_USER_ID`", as that’s what my records have.
 
 ## Authors:
 
