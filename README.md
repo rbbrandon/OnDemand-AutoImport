@@ -14,16 +14,16 @@ Required CSV headers:
 ```
 student_code,first_name,middle_name,surname,gender,date_of_birth,LBOTE,ATSI,disability_status,EMA,ESL,home_group,year_level
 ```
-Valid CSV Values:
+Valid CSV Values ([Source](http://webcache.googleusercontent.com/search?q=cache:k5dtnZVSvCAJ:www.vcaa.vic.edu.au/Documents/ondemand/ondteachertrainingguide.pdf+&cd=1&hl=en&ct=clnk&gl=au#31)):
 
 | Field             | Description                            | Accepted Values                                                                     | Mandatory? |
 | ----------------: | -------------------------------------- | ------------------------------------------------------------------------------------|------------|
 | student_code      | Student code                           | Any string 1-20 characters long.                                                    | Yes        |
 | first_name        | Student's first name                   | Any string 1-40 characters long.                                                    | Yes        |
-| middle_name       | Students middle name                   | Any string 0-40 characters long.                                                    | No         |
+| middle_name       | Student's middle name                  | Any string 0-40 characters long.                                                    | No         |
 | surname           | Studnet's surname                      | Any string 1-40 characters long.                                                    | Yes        |
 | gender            | Student's gender                       | "M", "MALE", "F", "FEMAL", "FEMALE".                                                | Yes        |
-| date_of_birth     | Date of birth                          | "MMM d yyyy" (e.g. Jan 1 2000), or "d/MM/yyy" (e.g. 1/01/2000).                     | Yes        | 
+| date_of_birth     | Student's date of birth                | "MMM d yyyy" (e.g. Jan 1 2000), or "d/MM/yyy" (e.g. 1/01/2000).                     | Yes        | 
 | LBOTE             | Language Background Other Than English | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
 | ATSI              | Aboriginal or Torres Strait Islander   | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
 | disability_status | If the student has a disablity or not  | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
