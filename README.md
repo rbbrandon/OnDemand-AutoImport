@@ -23,14 +23,14 @@ Valid CSV Values ([Source](http://webcache.googleusercontent.com/search?q=cache:
 | middle_name       | Student's middle name                  | Any string 0-40 characters long.                                                    | No         |
 | surname           | Studnet's surname                      | Any string 1-40 characters long.                                                    | Yes        |
 | gender            | Student's gender                       | "M", "MALE", "F", "FEMAL", "FEMALE".                                                | Yes        |
-| date_of_birth     | Student's date of birth                | "MMM d yyyy" (e.g. Jan 1 2000), or <br> "d/MM/yyy" (e.g. 1/01/2000).                     | Yes        | 
+| date_of_birth     | Student's date of birth                | "MMM d yyyy" (e.g. Jan 1 2000), or <br> "d/MM/yyy" (e.g. 1/01/2000).                | Yes        | 
 | LBOTE             | Language Background Other Than English | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
 | ATSI              | Aboriginal or Torres Strait Islander   | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
 | disability_status | If the student has a disablity or not  | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
 | EMA               | Education Maintenance Allowance        | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
 | ESL               | English as a Second Language           | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
 | home_group        | Students home group                    | Any string 0-40 characters long.                                                    | No         |
-| year_level        | Student's year level                   | Can be as 7, 8, 9 etc or with leading zeros ,i.e. 07, 08,09 etc.                    | Yes        |
+| year_level        | Student's year level                   | Can be with or without leading zeros.                                               | Yes        |
 
 ### Instructions:
 1. Download both `ImportOnDemandUsers.bat` and `ImportOnDemandUsers.ps1`.
