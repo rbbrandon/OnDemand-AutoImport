@@ -419,7 +419,7 @@ Function CheckRecordFail ($Record) {
             $Birth_Date = [datetime]::ParseExact($Record.date_of_birth, "MMM d yyyy", $null)
         }
     } catch {
-        $ErrorMsg += "`r`nERROR: date_of_birth ""$($Record.date_of_birth)"" is not a valid date. Must be in the format ""d/MM/yyyy""."
+        $ErrorMsg += "`r`nERROR: date_of_birth ""$($Record.date_of_birth)"" is not a valid date. Must be in the format ""d/MM/yyyy"" or ""MMM d yyyy""."
         $ValidationFailed = $true
     }
 
