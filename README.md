@@ -23,7 +23,7 @@ Valid CSV Values ([Source](http://webcache.googleusercontent.com/search?q=cache:
 | middle_name       | Student's middle name                  | Any string 0-40 characters long.                                                    | No         |
 | surname           | Studnet's surname                      | Any string 1-40 characters long.                                                    | Yes        |
 | gender            | Student's gender                       | "M", "MALE", "F", "FEMAL", "FEMALE".                                                | Yes        |
-| date_of_birth     | Student's date of birth                | "MMM d yyyy" (e.g. Jan 1 2000), or "d/MM/yyy" (e.g. 1/01/2000).                     | Yes        | 
+| date_of_birth     | Student's date of birth                | "MMM d yyyy" (e.g. Jan 1 2000), or <br> "d/MM/yyy" (e.g. 1/01/2000).                     | Yes        | 
 | LBOTE             | Language Background Other Than English | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
 | ATSI              | Aboriginal or Torres Strait Islander   | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
 | disability_status | If the student has a disablity or not  | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
