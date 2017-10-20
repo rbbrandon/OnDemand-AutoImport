@@ -18,7 +18,7 @@ Valid CSV Values ([Source](http://webcache.googleusercontent.com/search?q=cache:
 
 | Field             | Description                                 | Accepted Values                                                                     | Mandatory? |
 | ----------------: | ------------------------------------------- | ------------------------------------------------------------------------------------|------------|
-| student_code      | Student code                                | Any string 1-20 characters long.                                                    | Yes        |
+| student_code      | Student's CASES code                        | Any string 1-20 characters long.                                                    | Yes        |
 | first_name        | Student's first name                        | Any string 1-40 characters long.                                                    | Yes        |
 | middle_name       | Student's middle name                       | Any string 0-40 characters long.                                                    | No         |
 | surname           | Studnet's surname                           | Any string 1-40 characters long.                                                    | Yes        |
