@@ -9,10 +9,28 @@ This script will read a valid (see below) OnDemand Csv Student Import file, chec
 * Script Run "As Administrator"
 * Script Run Under Account with SQL Database Read/Write Access on the On Demand Server (e.g. "School Admin" account)
 
+### CSV Requirements:
 Required CSV headers:
 ```
 student_code,first_name,middle_name,surname,gender,date_of_birth,LBOTE,ATSI,disability_status,EMA,ESL,home_group,year_level
 ```
+Valid CSV Values:
+
+| Field             | Description                            | Accepted Values                                                                     | Mandatory? |
+| ----------------: | -------------------------------------- | ------------------------------------------------------------------------------------|------------|
+| student_code      | Student code                           | Any string 1-20 characters long.                                                    | Yes        |
+| first_name        | Student's first name                   | Any string 1-40 characters long.                                                    | Yes        |
+| middle_name       | Students middle name                   | Any string 0-40 characters long.                                                    | No         |
+| surname           | Studnet's surname                      | Any string 1-40 characters long.                                                    | Yes        |
+| gender            | Student's gender                       | "M", "MALE", "F", "FEMAL", "FEMALE".                                                | Yes        |
+| date_of_birth     | Date of birth                          | "MMM d yyyy" (e.g. Jan 1 2000), or "d/MM/yyy" (e.g. 1/01/2000).                     | Yes        | 
+| LBOTE             | Language Background Other Than English | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
+| ATSI              | Aboriginal or Torres Strait Islander   | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
+| disability_status | If the student has a disablity or not  | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
+| EMA               | Education Maintenance Allowance        | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
+| ESL               | English as a Second Language           | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
+| home_group        | Students home group                    | Any string 0-40 characters long.                                                    | No         |
+| year_level        | Student's year level                   | Can be as 7, 8, 9 etc or with leading zeros ,i.e. 07, 08,09 etc.                    | Yes        |
 
 ### Instructions:
 1. Download both `ImportOnDemandUsers.bat` and `ImportOnDemandUsers.ps1`.
