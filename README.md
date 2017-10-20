@@ -16,21 +16,21 @@ student_code,first_name,middle_name,surname,gender,date_of_birth,LBOTE,ATSI,disa
 ```
 Valid CSV Values ([Source](http://webcache.googleusercontent.com/search?q=cache:k5dtnZVSvCAJ:www.vcaa.vic.edu.au/Documents/ondemand/ondteachertrainingguide.pdf+&cd=1&hl=en&ct=clnk&gl=au#31)):
 
-| Field             | Description                            | Accepted Values                                                                     | Mandatory? |
-| ----------------: | -------------------------------------- | ------------------------------------------------------------------------------------|------------|
-| student_code      | Student code                           | Any string 1-20 characters long.                                                    | Yes        |
-| first_name        | Student's first name                   | Any string 1-40 characters long.                                                    | Yes        |
-| middle_name       | Student's middle name                  | Any string 0-40 characters long.                                                    | No         |
-| surname           | Studnet's surname                      | Any string 1-40 characters long.                                                    | Yes        |
-| gender            | Student's gender                       | "M", "MALE", "F", "FEMAL", "FEMALE".                                                | Yes        |
-| date_of_birth     | Student's date of birth                | "MMM d yyyy" (e.g. Jan 1 2000), or <br> "d/MM/yyyy" (e.g. 1/01/2000).               | Yes        | 
-| LBOTE             | Language Background Other Than English | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
-| ATSI              | Aboriginal or Torres Strait Islander   | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
-| disability_status | If the student has a disablity or not  | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
-| EMA               | Education Maintenance Allowance        | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
-| ESL               | English as a Second Language           | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
-| home_group        | Students home group                    | Any string 0-40 characters long.                                                    | No         |
-| year_level        | Student's year level                   | Numbers 1-12, "F", "UG". <br> (Can be with or without leading zeros).               | Yes        |
+| Field             | Description                                 | Accepted Values                                                                     | Mandatory? |
+| ----------------: | ------------------------------------------- | ------------------------------------------------------------------------------------|------------|
+| student_code      | Student code                                | Any string 1-20 characters long.                                                    | Yes        |
+| first_name        | Student's first name                        | Any string 1-40 characters long.                                                    | Yes        |
+| middle_name       | Student's middle name                       | Any string 0-40 characters long.                                                    | No         |
+| surname           | Studnet's surname                           | Any string 1-40 characters long.                                                    | Yes        |
+| gender            | Student's gender                            | "M", "MALE", "F", "FEMAL", "FEMALE".                                                | Yes        |
+| date_of_birth     | Student's date of <br> birth                | "MMM d yyyy" (e.g. Jan 1 2000), or <br> "d/MM/yyyy" (e.g. 1/01/2000).               | Yes        | 
+| LBOTE             | Language Background <br> Other Than English | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
+| ATSI              | Aboriginal or Torres <br> Strait Islander   | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
+| disability_status | If the student has a <br> disablity or not  | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
+| EMA               | Education Maintenance <br> Allowance        | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
+| ESL               | English as a Second <br> Language           | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
+| home_group        | Students home group                         | Any string 0-40 characters long.                                                    | No         |
+| year_level        | Student's year level                        | Numbers 1-12, "F", "UG". <br> (Can be with or without leading zeros).               | Yes        |
 
 ### Instructions:
 1. Download both `ImportOnDemandUsers.bat` and `ImportOnDemandUsers.ps1`.
