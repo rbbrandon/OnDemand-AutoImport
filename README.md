@@ -78,6 +78,14 @@ Use this to run the script as part of a scheduled task, and append the output to
 powershell.exe -ExecutionPolicy Bypass -Command "& 'c:\scripts\ImportOnDemandUsers.ps1' 'C:\My Files\OnDemand.csv'" >> c:\scripts\ImportOnDemandUsers.log
 ```
 
+
+
+***Note:*** *Due to the way that `Write-Host` works, the following command* ***will not*** *work in writing to the log file, as `Write-Host` is not piped to the log:*
+
+```powershell
+.\ImportOnDemandUsers.ps1 .\OnDemand.csv >> .\ImportOnDemandUsers.log
+```
+
 ## Notes:
 * The script only checks for student code (`STDNT_XID`) to determine a match for existing students.
 * I’m not 100% sure of the first "`STDNT_LID`" value, but from looking at my own database, the first record seems to start at "`[SCHL_ID]0000001000`" (e.g. "`13850000001000`"). Why "`1000`" at the end? No idea, but that’s my first record.
