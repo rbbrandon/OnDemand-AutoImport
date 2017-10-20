@@ -26,7 +26,7 @@ Valid CSV Values ([Source](http://webcache.googleusercontent.com/search?q=cache:
 | date_of_birth     | Student's date of <br> birth                | "MMM d yyyy" (e.g. Jan 1 2000), or <br> "d/MM/yyyy" (e.g. 1/01/2000).               | Yes        | 
 | LBOTE             | Language Background <br> Other Than English | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
 | ATSI              | Aboriginal or Torres <br> Strait Islander   | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
-| disability_status | If the student has a <br> disablity or not  | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
+| disability_status | If the student has a <br> disability or not | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
 | EMA               | Education Maintenance <br> Allowance        | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
 | ESL               | English as a Second <br> Language           | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
 | home_group        | Students home group                         | Any string 0-40 characters long.                                                    | No         |
