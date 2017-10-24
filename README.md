@@ -109,6 +109,7 @@ powershell.exe -ExecutionPolicy Bypass -Command "& 'c:\scripts\ImportOnDemandUse
 * Added extended student match checking.
 * Added coloured output.
 * Added option to mark students not in the CSV as "DELETED".
+* Added output saying *what* changed with a student record to cause the update.
 
 ## v1.0
 * Initial Release
