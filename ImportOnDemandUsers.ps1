@@ -11,8 +11,9 @@ student_code,first_name,middle_name,surname,gender,date_of_birth,LBOTE,ATSI,disa
 
 .NOTES
 Author      : Robert Brandon
+Version     : 1.1
 Created     : 10/10/2017
-Last Edited : 20/10/2017
+Last Edited : 24/10/2017
 Requires    : SQL Server PowerShell Module (SQLPS);
               PowerShell v3.0+;
               Script Run "As Administrator";
@@ -65,16 +66,18 @@ Param(
     [Parameter( Position=1,
                 ParameterSetName="SchoolID",
                 HelpMessage='Please specify the On Demand SchoolID.')]
-    [string] $SchoolID
+    [string] $SchoolID,
+    [switch] $SkipExtendedRecordChecks,
+    [switch] $MarkMissingStudentsAsDeleted
 )
 
 # Define main script function.
 Function Main ($CsvFile, $SchoolID)
 {
     Write-Color "`r`n******************************"
-    Write-Color "    On Demand CSV Importer    "
+    Write-Color "    On Demand CSV Importer    " -Color Green
     Write-Color "******************************"
-    Write-Color "(Runtime: $((Get-Date).ToString("dd/MM/yyyy HH:mm:ss")))`r`n"
+    Write-Color "(Runtime: $((Get-Date).ToString("dd/MM/yyyy HH:mm:ss")))`r`n" -Color DarkGray
 
     #region Import all required modules
     Write-Output " Importing modules"
@@ -205,10 +208,10 @@ Function Main ($CsvFile, $SchoolID)
         # Reformat birthdate into a value compatible with SQL.
         try {
             # try "1/01/2017" format.
-            $Birth_Date = [datetime]::ParseExact($Record.date_of_birth, "d/MM/yyyy", $null).ToString("yyyyMMdd HH:mm:ss")
+            $Birth_Date = [datetime]::ParseExact($Record.date_of_birth, "d/MM/yyyy", $null) #.ToString("yyyyMMdd HH:mm:ss")
         } catch {
             # Try "Jan 1 2017" format.
-            $Birth_Date = [datetime]::ParseExact($Record.date_of_birth, "MMM d yyyy", $null).ToString("yyyyMMdd HH:mm:ss")
+            $Birth_Date = [datetime]::ParseExact($Record.date_of_birth, "MMM d yyyy", $null) #.ToString("yyyyMMdd HH:mm:ss")
         }
 
         # Clean bool values to a "0" or "1".
@@ -241,24 +244,87 @@ Function Main ($CsvFile, $SchoolID)
 
         # Check if the student code for the current record already exists in the database.
         if ($Students.STDNT_XID -contains $Record.student_code) {
-            # Student code already exists - Check if student requires updating.
             $ExistingStudent = $Students | Where-Object { $_.STDNT_XID -eq $Record.student_code }
+
+            if (!$SkipExtendedRecordChecks) {
+                # Check if at least 2 of: first_name, surname, dob are the same.
+                $MatchingFields = 0
+                if ($Record.first_name -eq $ExistingStudent.STDNT_FRST_NAME) { $MatchingFields++ }
+                if ($Record.surname -eq $ExistingStudent.STDNT_SRNM)         { $MatchingFields++ }
+                if ($Birth_Date -eq $ExistingStudent.BIRTH_DT)               { $MatchingFields++ }
+
+                if ($MatchingFields -lt 2) {
+                    Write-Red "  ERROR: A student with the student code of ""$($Record.student_code)"" already exists, and differs from the existing record in 2 or more identity fields:"
+                    Write-Red "         (Re-run the script with the ""-SkipExtendedRecordChecks"" parameter to bypass this check.)`r`n"
+
+                    Write-Red "         Existing Record : $(($ExistingStudent |
+                        SELECT @{Name="student_code" ; Expression = {$_.STDNT_XID}},
+                               @{Name="first_name"   ; Expression = {$_.STDNT_FRST_NAME}},
+                               @{Name="surname"      ; Expression = {$_.STDNT_SRNM}},
+                               @{Name="date_of_birth"; Expression = {$_.BIRTH_DT.ToString("MMM dd yyyy")}} |
+                        Format-Table -AutoSize | Out-String).TrimEnd())"
+
+                    Write-Red "`r`n         New Record : $(($Record |
+                        SELECT student_code,
+                               first_name, 
+                               surname, 
+                               @{Name="date_of_birth"; Expression = {$Birth_Date.ToString("MMM dd yyyy")}} | 
+                        Format-Table -AutoSize | Out-String).TrimEnd())"
+
+                    $Errors++
+                    Continue
+                }
+            }
+
+            # Student matches- Check if student requires updating, and what is being updated.
+            $UpdatedStudentInformation = ""
+
+            if ($ExistingStudent.YEAR_LVL_ID -ne $Year_Lvl_Id) {
+                $ExistingStudent.YEAR_LVL_DSCRPTN = $YearLevels | Where-Object { $_.YEAR_LVL_ID -eq $ExistingStudent.YEAR_LVL_ID }  | select -ExpandProperty YEAR_LVL_DSCRPTN
+                $UpdatedStudentInformation += "    - Changing Year Level from ""$($ExistingStudent.YEAR_LVL_DSCRPTN)"" to ""$($Record.year_level)"".`r`n"
+            }
+            if ($ExistingStudent.STDNT_FRST_NAME -ne $Record.first_name) {
+                $UpdatedStudentInformation += "    - Changing First Name from ""$($ExistingStudent.STDNT_FRST_NAME)"" to ""$($Record.first_name)"".`r`n"
+            }
+            if ($ExistingStudent.STDNT_MDL_NAME -ne $Record.middle_name) {
+                $UpdatedStudentInformation += "    - Changing Middle Name from ""$($ExistingStudent.STDNT_MDL_NAME)"" to ""$($Record.middle_name)"".`r`n"
+            }
+            if ($ExistingStudent.STDNT_SRNM -ne $Record.surname) {
+                $UpdatedStudentInformation += "    - Changing Surname from ""$($ExistingStudent.STDNT_SRNM)"" to ""$($Record.surname)"".`r`n"
+            }
+            if ($ExistingStudent.GNDR_CD -ne $Record.gender) {
+                $UpdatedStudentInformation += "    - Changing Gender from ""$($ExistingStudent.GNDR_CD)"" to ""$($Record.gender)"".`r`n"
+            }
+            if ($ExistingStudent.BIRTH_DT -ne $Birth_Date) {
+                $UpdatedStudentInformation += "    - Changing Birth Date from ""$($ExistingStudent.BIRTH_DT.ToString("MMM dd yyyy"))"" to ""$($Birth_Date.ToString("MMM dd yyyy"))"".`r`n"
+            }
+            if ($ExistingStudent.LBOTE_IND -ne [Int32]$Record.LBOTE) {
+                $UpdatedStudentInformation += "    - Changing LBOTE status from ""$($ExistingStudent.LBOTE_IND)"" to ""$($Record.LBOTE)"".`r`n"
+            }
+            if ($ExistingStudent.ATSI_IND -ne [Int32]$Record.ATSI) {
+                $UpdatedStudentInformation += "    - Changing ATSI status from ""$($ExistingStudent.ATSI_IND)"" to ""$($Record.ATSI)"".`r`n"
+            }
+            if ($ExistingStudent.DSBLTY_IND -ne [Int32]$Record.disability_status) {
+                $UpdatedStudentInformation += "    - Changing Disability status from ""$($ExistingStudent.DSBLTY_IND)"" to ""$($Record.disability_status)"".`r`n"
+            }
+            if ($ExistingStudent.EMA_IND -ne [Int32]$Record.EMA) {
+                $UpdatedStudentInformation += "    - Changing EMA status from ""$($ExistingStudent.EMA_IND)"" to ""$($Record.EMA)"".`r`n"
+            }
+            if ($ExistingStudent.ESL_IND -ne [Int32]$Record.ESL) {
+                $UpdatedStudentInformation += "    - Changing ESL status from ""$($ExistingStudent.ESL_IND)"" to ""$($Record.ESL)"".`r`n"
+            }
+            if ($ExistingStudent.HOME_GRP_NAME -ne $Record.home_group) {
+                $UpdatedStudentInformation += "    - Changing Home Group from ""$($ExistingStudent.HOME_GRP_NAME)"" to ""$($Record.home_group)"".`r`n"
+            }
+            if ($ExistingStudent.DLTD_IND -eq 1) {
+                $UpdatedStudentInformation += "    - Marking student as ""NOT DELETED"".`r`n"
+            }
         
-            if ($ExistingStudent.YEAR_LVL_ID -ne $Year_Lvl_Id -or
-                $ExistingStudent.STDNT_FRST_NAME -ne $Record.first_name -or
-                $ExistingStudent.STDNT_MDL_NAME -ne $Record.middle_name -or
-                $ExistingStudent.STDNT_SRNM -ne $Record.surname -or
-                $ExistingStudent.GNDR_CD -ne $Record.gender -or
-                $ExistingStudent.BIRTH_DT.ToString("yyyyMMdd HH:mm:ss") -ne $Birth_Date -or
-                $ExistingStudent.LBOTE_IND -ne [Int32]$Record.LBOTE -or
-                $ExistingStudent.ATSI_IND -ne [Int32]$Record.ATSI -or
-                $ExistingStudent.DSBLTY_IND -ne [Int32]$Record.disability_status -or
-                $ExistingStudent.EMA_IND -ne [Int32]$Record.EMA -or
-                $ExistingStudent.ESL_IND -ne [Int32]$Record.ESL -or
-                $ExistingStudent.HOME_GRP_NAME -ne $Record.home_group)
+            if ($UpdatedStudentInformation -ne "")
             {
                 # Student information from CSV is different, therefore student requires updating.
-                Write-Color "  Updating $($Record.first_name) $($Record.surname) ($($Record.student_code))'s Student Information..."
+                Write-Color   "  Updating ", "$($Record.first_name) $($Record.surname)", " (", $Record.student_code, ")'s Student Information..." -Color Default, DarkYellow, Default, Magenta, Default
+                Write-Color "$($UpdatedStudentInformation.TrimEnd())"
 
                 $SQLQuery = "UPDATE STUDENT "`
                           + "SET YEAR_LVL_ID = $Year_Lvl_Id, "`
@@ -266,7 +332,7 @@ Function Main ($CsvFile, $SchoolID)
                               + "STDNT_MDL_NAME = '$($Record.middle_name)', "`
                               + "STDNT_SRNM = '$($Record.surname)', "`
                               + "GNDR_CD = '$($Record.gender)', "`
-                              + "BIRTH_DT = '$($Birth_Date)', "`
+                              + "BIRTH_DT = '$($Birth_Date.ToString("yyyyMMdd HH:mm:ss"))', "`
                               + "LBOTE_IND = $($Record.LBOTE), "`
                               + "ATSI_IND = $($Record.ATSI), "`
                               + "DSBLTY_IND = $($Record.disability_status), "`
@@ -275,7 +341,8 @@ Function Main ($CsvFile, $SchoolID)
                               + "HOME_GRP_NAME = '$($Record.home_group)', "`
                               + "LAST_UPDATED_USER_ID = 0, "`
                               + "LAST_UPDATED_DT_TM = '$Now', "`
-                              + "LAST_UPDATED_SQNC = $($ExistingStudent.LAST_UPDATED_SQNC + 1) "`
+                              + "LAST_UPDATED_SQNC = $($ExistingStudent.LAST_UPDATED_SQNC + 1), "`
+                              + "DLTD_IND = 0 "`
                           + "WHERE STDNT_LID = $($ExistingStudent.STDNT_LID)"
 
                 Write-Verbose "Executing: $SQLQuery"
@@ -293,14 +360,14 @@ Function Main ($CsvFile, $SchoolID)
             }
         } else {
             # Student doesn't exist in the database, therefore must be a new student. Add the student to the database.
-            Write-Color "  Adding $($Record.first_name) $($Record.surname) ($($Record.student_code))'s Student Information..."
+            Write-Color "  Adding ", "$($Record.first_name) $($Record.surname)", " (", $Record.student_code, ")'s Student Information to the AIM Database..." -Color Default, DarkYellow, Default, Magenta, Default
 
             # Prepare the SQL Query to run.
             $SQLQuery = "INSERT INTO STUDENT (STDNT_LID, YEAR_LVL_ID, SCHL_ID, STDNT_XID, STDNT_EXTRNL_XID, STDNT_FRST_NAME, STDNT_MDL_NAME, "`
                       + "STDNT_SRNM, GNDR_CD, BIRTH_DT, LBOTE_IND, ATSI_IND, DSBLTY_IND, EMA_IND, ESL_IND, HOME_GRP_NAME, CREATED_USER_ID, "`
                       + "CREATED_DT_TM, LAST_UPDATED_USER_ID, LAST_UPDATED_DT_TM, LAST_UPDATED_SQNC, DLTD_IND) "`
                       + "VALUES ($NextStudentID, $Year_Lvl_Id, $SchoolID, '$($Record.student_code)', '$($Record.student_code)', "`
-                      + "'$($Record.first_name)', '$($Record.middle_name)', '$($Record.surname)', '$($Record.gender)', '$Birth_Date', "`
+                      + "'$($Record.first_name)', '$($Record.middle_name)', '$($Record.surname)', '$($Record.gender)', '$($Birth_Date.ToString("yyyyMMdd HH:mm:ss"))', "`
                       + "$($Record.LBOTE), $($Record.ATSI), $($Record.disability_status), $($Record.EMA), $($Record.ESL), '$($Record.home_group)', "`
                       + "0, '$Now', 0, '$Now', 1, 0)"
 
@@ -321,26 +388,64 @@ Function Main ($CsvFile, $SchoolID)
     Write-Green " - Done."
     #endregion
 
+    #region (OPTIONAL) Mark missing CSV Students as "Deleted".
+    $Deletes = 0
+
+    if ($MarkMissingStudentsAsDeleted) {
+        Write-Color " Checking local AIM database for students not found in $CsvFile..."
+
+        foreach ($Student in $Students) {
+            if ($ImportedCsv.student_code -notcontains $Student.STDNT_XID -and $Student.DLTD_IND -eq 0) {
+                Write-Color "  Student """, "$($Student.STDNT_FRST_NAME) $($Student.STDNT_SRNM)", " (", $Student.STDNT_XID, 
+                    ")"" was not found; Marking student as """, "DELETED", """ ", "(NOTE: Can be undone)." -Color Default, DarkYellow, Default, Magenta, Default, Red, Default, DarkGreen
+
+                $SQLQuery = "UPDATE STUDENT SET DLTD_IND = 1 WHERE STDNT_LID = '$($Student.STDNT_LID)'"
+
+                Write-Verbose "Executing: $SQLQuery"
+
+                try {
+                    Invoke-SqlCmd -Hostname localhost -Database AIM -Query $SQLQuery
+                    $Deletes++
+                    Write-Green "  - Done."
+                } catch {
+                    Write-Red "ERROR: Command failed: $SQLQuery"
+                }
+            }
+        }
+
+        Write-Green "- Done."
+    }
+    #endregion
+
     #region Display Results
     Write-Output "`r`n$($ImportedCsv.Count) total records checked:"
     if ($Updates -gt 0) {
-        Write-Green "- $Updates Existing Student$(if ($Updates -ne 1) { "s" }) Updated."
+        Write-Green "- $Updates Existing student$(if ($Updates -ne 1) { "s" }) updated."
     } else {
         Write-Color "- 0 Existing students updated."
     }
 
     if ($Inserts -gt 0) {
-        Write-Green "- $Inserts New Student$(if ($Inserts -ne 1) { "s" }) Added."
+        Write-Green "- $Inserts New student$(if ($Inserts -ne 1) { "s" }) added."
     } else {
         Write-Color "- 0 New students added."
     }
 
+    if ($MarkMissingStudentsAsDeleted) {
+        if ($Deletes -gt 0) {
+            Write-Green "- $Deletes student$(if ($Deletes -ne 1) { "s" }) marked as ""DELETED""."
+        } else {
+            Write-Color "- 0 Students marked as ""DELETED""."
+        }
+    }
 
     if ($Errors -gt 0) {
         Write-Red "- $Errors Record$(if ($Errors -ne 1) { "s" }) ignored due to errors. :("
     } else {
         Write-Green "- 0 Records with errors. :)"
     }
+
+    Write-Color "`r`n(Endtime: $((Get-Date).ToString("dd/MM/yyyy HH:mm:ss")))" -Color DarkGray
     #endregion
 }
 
@@ -469,14 +574,45 @@ Function Clean-Year ($Value) {
     }
 }
 
-function Write-Color([String[]]$Text, [ConsoleColor[]]$Color = @()) {
+Add-Type -TypeDefinition @"
+   public enum Colour
+   {
+      Black,
+      DarkBlue,
+      DarkGreen, 
+      DarkCyan, 
+      DarkRed, 
+      DarkMagenta, 
+      DarkYellow, 
+      Gray, 
+      DarkGray, 
+      Blue, 
+      Green, 
+      Cyan, 
+      Red, 
+      Magenta, 
+      Yellow, 
+      White,
+      Default
+   }
+"@
+
+function Write-Color([String[]]$Text, [Colour[]]$Color = @()) {
     if ($Color.Count -ge $Text.Count) {
         for ($i = 0; $i -lt $Text.Length; $i++) {
-            Write-Host $Text[$i] -ForegroundColor $Color[$i] -NoNewLine
+            if ($Color[$i] -ne "Default") {
+                Write-Host $Text[$i] -ForegroundColor $Color[$i].value__ -NoNewLine
+            } else {
+                Write-Host $Text[$i] -NoNewLine
+            }
         } 
     } else {
         for ($i = 0; $i -lt $Color.Length ; $i++) {
-            Write-Host $Text[$i] -ForegroundColor $Color[$i] -NoNewLine
+            if ($Color[$i] -ne "Default") {
+                Write-Host $Text[$i] -ForegroundColor $Color[$i].value__ -NoNewLine
+            } else {
+                Write-Host $Text[$i] -NoNewLine
+            }
         }
         for ($i = $Color.Length; $i -lt $Text.Length; $i++) {
             Write-Host $Text[$i] -NoNewLine
