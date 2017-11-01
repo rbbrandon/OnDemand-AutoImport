@@ -105,11 +105,15 @@ powershell.exe -ExecutionPolicy Bypass -Command "& 'c:\scripts\ImportOnDemandUse
 * **Robert Brandon** - *Initial work*
  
 # Changelog:
-## v1.1
+## v1.2 (01/11/2017)
+* Any records with "P" as the year will automatically be converted to "F" before inserting into the DB.
+* NULL stdnt_extrnl_xid entries will be fixed automatically.
+
+## v1.1 (24/10/2017)
 * Added extended student match checking.
 * Added coloured output.
 * Added option to mark students not in the CSV as "DELETED".
 * Added output saying *what* changed with a student record to cause the update.
 
-## v1.0
+## v1.0 (10/10/2017)
 * Initial Release
