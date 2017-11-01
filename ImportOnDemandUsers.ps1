@@ -11,9 +11,9 @@ student_code,first_name,middle_name,surname,gender,date_of_birth,LBOTE,ATSI,disa
 
 .NOTES
 Author      : Robert Brandon
-Version     : 1.1
+Version     : 1.2
 Created     : 10/10/2017
-Last Edited : 24/10/2017
+Last Edited : 01/11/2017
 Requires    : SQL Server PowerShell Module (SQLPS);
               PowerShell v3.0+;
               Script Run "As Administrator";
@@ -156,6 +156,10 @@ Function Main ($CsvFile, $SchoolID)
         Write-Red "         Script must be run on the On Demand server under an account that has write access to the SQL database."
         return
     }
+    #endregion
+    
+    #region Fix records with NULL EXTRNL_XID
+    Invoke-SqlCmd -Hostname localhost -Database AIM -Query "UPDATE student SET stdnt_extrnl_xid = stdnt_xid WHERE stdnt_extrnl_xid IS NULL"
     #endregion
 
     #region Get Existing Student Information
@@ -462,7 +466,7 @@ Function EndScript {
 Function CheckRecordFail ($Record) {
     $ValidBool        = "0", "N", "No", "F", "False", "1", "Y", "Yes", "T", "True"
     $ValidGenders     = "M", "MALE", "F", "FEMAL", "FEMALE"
-    $ValidYearLevels  = "01", "02", "03", "04", "05", "06", "07", "08", "09", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "F", "UG"
+    $ValidYearLevels  = "01", "02", "03", "04", "05", "06", "07", "08", "09", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "F", "P", "UG"
     $ValidationFailed = $false
     $ErrorMsg         = ""
 
@@ -570,6 +574,7 @@ Function Clean-Year ($Value) {
         "7" { "07"; break;}
         "8" { "08"; break;}
         "9" { "09"; break;}
+        "P" {  "F"; break;}
         default { $Value }
     }
 }
