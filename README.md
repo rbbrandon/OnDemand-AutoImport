@@ -33,7 +33,7 @@ Valid CSV Values ([Source](http://webcache.googleusercontent.com/search?q=cache:
 | EMA               | Education Maintenance <br> Allowance        | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
 | ESL               | English as a Second <br> Language           | "1", "T", "True", "Y", "Yes" for TRUE; <br> "0", "F", "False", "N", "No" for FALSE. | Yes        |
 | home_group        | Students home group                         | Any string 0-40 characters long.                                                    | No         |
-| year_level        | Student's year level                        | Numbers 1-12, "F", "UG". <br> (Can be with or without leading zeros).               | Yes        |
+| year_level        | Student's year level                        | Numbers 1-12, "P", F", "UG". <br> (Can be with or without leading zeros).               | Yes        |
 
 ### Instructions:
 1. Download both `ImportOnDemandUsers.bat` and `ImportOnDemandUsers.ps1`.
