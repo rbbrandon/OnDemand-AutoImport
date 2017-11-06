@@ -16,7 +16,10 @@ $OutPutFile = $DriveLetter + "OnDemand.csv"
 # in order to export the whole school in a multicampus school remove the line "	where-object{$_.CAMPUS -eq "2"}|"
 # This not required in a single campus school or when exporting the campuses separately.
 
-$StudentCSV = Import-Csv -Path ($StudentFile, $StudentDeltaFile) | 
+$StudentCSVFiles = @($StudentFile)
+if (Test-Path $StudentDeltaFile) { $StudentCSVFiles += $StudentDeltaFile }
+
+$StudentCSV = Import-Csv -Path $StudentCSVFiles | 
 	Where-Object { $_.STATUS -eq "ACTV" -or $_.STATUS -eq "FUT" } |
     Foreach-Object {$_.LW_DATE = [DateTime]::ParseExact($_.LW_DATE,"d/MM/yyyy h:mm:ss tt", [System.Globalization.CultureInfo]::InvariantCulture); $_} | 
     Group-Object STKEY | 
@@ -39,7 +42,10 @@ $StudentCSV = Import-Csv -Path ($StudentFile, $StudentDeltaFile) |
 		@{ Name = "year_level"; Expression = { ($_.SCHOOL_YEAR) } } |
 	Sort-Object -property student_code
 
-$FamilyCSV = Import-Csv -Path ($FamilyFile, $FamilyDeltaFile) | 
+$FamilyCSVFiles = @($FamilyFile)
+if (Test-Path $FamilyDeltaFile) { $FamilyCSVFiles += $FamilyDeltaFile }
+
+$FamilyCSV = Import-Csv -Path $FamilyCSVFiles | 
     Foreach-Object {$_.LW_DATE = [DateTime]::ParseExact($_.LW_DATE,"d/MM/yyyy h:mm:ss tt", [System.Globalization.CultureInfo]::InvariantCulture); $_} | 
     Group-Object DFKEY | 
     Foreach-Object {$_.Group | Sort-Object LW_DATE | Select-Object -Last 1} |
