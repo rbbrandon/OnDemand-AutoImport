@@ -2,6 +2,16 @@
 
 This script will read a valid (see below) OnDemand Csv Student Import file, check the local On Demand database for any required additions/modifications, and inserts/updates records as needed. Use this script for automating On Demand imports.
 
+## Main Features:
+* Imports a valid On Demand CSV file to create new, and modify existing On Demand users.
+* Can be automated via a `.bat` file (example included) to bring relief to your On Demand admin.
+* `NULL` `STDNT_EXTRNL_XID` values are auto-corrected to `STDNT_XID`.
+* Empty `STDNT_MDL_NAME` and `HOME_GRP_NAME` values are corrected to `NULL` (if required).
+* School ID auto-detected, unless you have multiple schools on the same server- if so, school IDs are shown so that you can specify the ID.
+* "P" year levels, are auto-converted to the "F" that OnDemand expects.
+* Ability to mark students *not* in the imported CSV as "DELETED" (disabled by default).
+* Colourised output (if run in a powershell console).
+
 ## Screenshot:
 ![Example of running the script.](Screenshot.png)
 
