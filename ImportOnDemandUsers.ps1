@@ -11,15 +11,15 @@ student_code,first_name,middle_name,surname,gender,date_of_birth,LBOTE,ATSI,disa
 
 .NOTES
 Author      : Robert Brandon
-Version     : 1.2
+Version     : 1.3
 Created     : 10/10/2017
-Last Edited : 01/11/2017
+Last Edited : 06/11/2017
 Requires    : SQL Server PowerShell Module (SQLPS);
               PowerShell v3.0+;
               Script Run "As Administrator";
               Script Run Under Account with SQL Database Read/Write Access on the On Demand Server.
 
-(To run as a scheduled task, use  examples 4 or 5.)
+(To run as a scheduled task, use  examples 6 or 7.)
 
 .LINK
 SQL Server PowerShell Module (SQLPS) : https://docs.microsoft.com/en-us/sql/relational-databases/scripting/import-the-sqlps-module
@@ -35,6 +35,14 @@ Imports "OnDemand.csv" from the "C:\My Files\" directory, and sets the SchoolID 
 .EXAMPLE
 .\ImportOnDemandUsers.ps1 "C:\My Files\OnDemand.csv" -Verbose
 Imports "OnDemand.csv" from the "C:\My Files\" directory, and displays additional information.
+
+.EXAMPLE
+.\ImportOnDemandUsers.ps1 "C:\My Files\OnDemand.csv" -SkipExtendedRecordChecks
+Imports "OnDemand.csv" from the "C:\My Files\" directory, and only checks the student_code for matching students.
+
+.EXAMPLE
+.\ImportOnDemandUsers.ps1 "C:\My Files\OnDemand.csv" -MarkMissingStudentsAsDeleted
+Imports "OnDemand.csv" from the "C:\My Files\" directory, and marks students not in the CSV as "DELETED".
 
 .EXAMPLE
 powershell.exe -ExecutionPolicy Bypass -Command "& 'c:\scripts\ImportOnDemandUsers.ps1' 'C:\My Files\OnDemand.csv'"
@@ -159,6 +167,7 @@ Function Main ($CsvFile, $SchoolID)
     #endregion
     
     #region Fix records with NULL EXTRNL_XID
+    Write-Verbose "  Fixing null STDNT_EXTRNL_XIDs."
     Invoke-SqlCmd -Hostname localhost -Database AIM -Query "UPDATE student SET stdnt_extrnl_xid = stdnt_xid WHERE stdnt_extrnl_xid IS NULL"
     #endregion
 
@@ -205,10 +214,6 @@ Function Main ($CsvFile, $SchoolID)
             $_.year_level = $_.year_level.Replace("'", "").Replace("""", "");
         }
 
-        # Set HG and middle name if not specified
-        if ($null -eq $Record.home_group) { $Record.home_group = "" }
-        if ($null -eq $Record.middle_name) { $Record.middle_name = "" }
-
         # Reformat birthdate into a value compatible with SQL.
         try {
             # try "1/01/2017" format.
@@ -217,6 +222,10 @@ Function Main ($CsvFile, $SchoolID)
             # Try "Jan 1 2017" format.
             $Birth_Date = [datetime]::ParseExact($Record.date_of_birth, "MMM d yyyy", $null) #.ToString("yyyyMMdd HH:mm:ss")
         }
+
+        # Clean nullable strings.
+        $Record.middle_name = Clean-Nullable $Record.middle_name
+        $Record.home_group  = Clean-Nullable $Record.home_group
 
         # Clean bool values to a "0" or "1".
         $Record.LBOTE             = Clean-Bool $Record.LBOTE
@@ -228,7 +237,7 @@ Function Main ($CsvFile, $SchoolID)
         # Clean gender value to what the DB is expecting ("MALE"/"FEMAL")
         $Record.gender = Clean-Gender $Record.gender
 
-        # Clean year level value to what the DB is expecting (e.g. "01" instead of "1")
+        # Clean year level value to what the DB is expecting (e.g. "01" instead of "1", or "F" instead of "P")
         $Record.year_level = Clean-Year $Record.year_level
 
         # Get year level ID
@@ -249,6 +258,10 @@ Function Main ($CsvFile, $SchoolID)
         # Check if the student code for the current record already exists in the database.
         if ($Students.STDNT_XID -contains $Record.student_code) {
             $ExistingStudent = $Students | Where-Object { $_.STDNT_XID -eq $Record.student_code }
+
+            # Clean nullable values
+            $ExistingStudent.STDNT_MDL_NAME = Clean-Nullable $ExistingStudent.STDNT_MDL_NAME
+            $ExistingStudent.HOME_GRP_NAME  = Clean-Nullable $ExistingStudent.HOME_GRP_NAME
 
             if (!$SkipExtendedRecordChecks) {
                 # Check if at least 2 of: first_name, surname, dob are the same.
@@ -333,7 +346,7 @@ Function Main ($CsvFile, $SchoolID)
                 $SQLQuery = "UPDATE STUDENT "`
                           + "SET YEAR_LVL_ID = $Year_Lvl_Id, "`
                               + "STDNT_FRST_NAME = '$($Record.first_name)', "`
-                              + "STDNT_MDL_NAME = '$($Record.middle_name)', "`
+                              + "STDNT_MDL_NAME = " + $(if ([string]::IsNullOrWhitespace($Record.middle_name)) {"NULL, "} Else {"'$($Record.middle_name)', "})`
                               + "STDNT_SRNM = '$($Record.surname)', "`
                               + "GNDR_CD = '$($Record.gender)', "`
                               + "BIRTH_DT = '$($Birth_Date.ToString("yyyyMMdd HH:mm:ss"))', "`
@@ -342,7 +355,7 @@ Function Main ($CsvFile, $SchoolID)
                               + "DSBLTY_IND = $($Record.disability_status), "`
                               + "EMA_IND = $($Record.EMA), "`
                               + "ESL_IND = $($Record.ESL), "`
-                              + "HOME_GRP_NAME = '$($Record.home_group)', "`
+                              + "HOME_GRP_NAME = " + $(if ([string]::IsNullOrWhitespace($Record.home_group)) {"NULL, "} Else {"'$($Record.home_group)', "})`
                               + "LAST_UPDATED_USER_ID = 0, "`
                               + "LAST_UPDATED_DT_TM = '$Now', "`
                               + "LAST_UPDATED_SQNC = $($ExistingStudent.LAST_UPDATED_SQNC + 1), "`
@@ -352,7 +365,7 @@ Function Main ($CsvFile, $SchoolID)
                 Write-Verbose "Executing: $SQLQuery"
 
                 try {
-                    Invoke-SqlCmd -Hostname localhost -Database AIM -Query $SQLQuery
+                    #Invoke-SqlCmd -Hostname localhost -Database AIM -Query $SQLQuery
                     $Updates += 1
                     Write-Green "  - Done."
                 } catch {
@@ -370,9 +383,11 @@ Function Main ($CsvFile, $SchoolID)
             $SQLQuery = "INSERT INTO STUDENT (STDNT_LID, YEAR_LVL_ID, SCHL_ID, STDNT_XID, STDNT_EXTRNL_XID, STDNT_FRST_NAME, STDNT_MDL_NAME, "`
                       + "STDNT_SRNM, GNDR_CD, BIRTH_DT, LBOTE_IND, ATSI_IND, DSBLTY_IND, EMA_IND, ESL_IND, HOME_GRP_NAME, CREATED_USER_ID, "`
                       + "CREATED_DT_TM, LAST_UPDATED_USER_ID, LAST_UPDATED_DT_TM, LAST_UPDATED_SQNC, DLTD_IND) "`
-                      + "VALUES ($NextStudentID, $Year_Lvl_Id, $SchoolID, '$($Record.student_code)', '$($Record.student_code)', "`
-                      + "'$($Record.first_name)', '$($Record.middle_name)', '$($Record.surname)', '$($Record.gender)', '$($Birth_Date.ToString("yyyyMMdd HH:mm:ss"))', "`
-                      + "$($Record.LBOTE), $($Record.ATSI), $($Record.disability_status), $($Record.EMA), $($Record.ESL), '$($Record.home_group)', "`
+                      + "VALUES ($NextStudentID, $Year_Lvl_Id, $SchoolID, '$($Record.student_code)', '$($Record.student_code)', '$($Record.first_name)', "`
+                      + $(if ([string]::IsNullOrWhitespace($Record.middle_name)) {"NULL, "} Else {"'$($Record.middle_name)', "})`
+                      + "'$($Record.surname)', '$($Record.gender)', '$($Birth_Date.ToString("yyyyMMdd HH:mm:ss"))', "`
+                      + "$($Record.LBOTE), $($Record.ATSI), $($Record.disability_status), $($Record.EMA), $($Record.ESL), "`
+                      + $(if ([string]::IsNullOrWhitespace($Record.home_group)) {"NULL, "} Else {"'$($Record.home_group)', "})`
                       + "0, '$Now', 0, '$Now', 1, 0)"
 
             Write-Verbose "Executing: $SQLQuery"
@@ -576,6 +591,14 @@ Function Clean-Year ($Value) {
         "9" { "09"; break;}
         "P" {  "F"; break;}
         default { $Value }
+    }
+}
+
+Function Clean-Nullable ($Value) {
+    if ($Value.GetType().Name -eq 'DBNull' -or [String]::IsNullOrWhiteSpace($Value)) {
+        return ''
+    } else {
+        return $Value
     }
 }
 
