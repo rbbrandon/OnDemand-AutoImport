@@ -4,7 +4,7 @@ This script will export data for existing, leaving, and future students from Edu
 
 ## Getting Started
 ### Prerequisites:
-* Script must be run on the same server that hosts eduHub, under an account with at least read access to the local eduHub directory (e.g. C:\eduhub).
+* Script must be run on the same server that hosts eduHub, under an account with at least read access to the local eduHub directory (e.g. D:\eduhub).
 
 ### Setup:
 1. Download both `EduHub-OnDemand.bat` and `EduHub-OnDemand.ps1` to the admin server that is running EduHub.
@@ -15,6 +15,7 @@ This script will export data for existing, leaving, and future students from Edu
 ## Notes:
 * This script is based on Graeme Shea's UserCreator script, as as such can be run together with it; Just add running `EduHub-OnDemand.ps1` to the UserCreator export, and you're good to go.
 * If you don't wish to save to a network share, change `$DriveLetter = "L:\"` in `EduHub-OnDemand.ps1` to whatever local folder you want (e.g. `"D:\OnDemand\"`).
+* If using the "Network Service" account, make sure that the "Network Service" account *actually* has read access to the eduHub directory. If not, it'll fail to read the data.
 
 ## Authors:
 
