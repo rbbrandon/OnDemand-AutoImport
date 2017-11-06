@@ -166,9 +166,11 @@ Function Main ($CsvFile, $SchoolID)
     }
     #endregion
     
-    #region Fix records with NULL EXTRNL_XID
-    Write-Verbose "  Fixing null STDNT_EXTRNL_XIDs."
-    Invoke-SqlCmd -Hostname localhost -Database AIM -Query "UPDATE student SET stdnt_extrnl_xid = stdnt_xid WHERE stdnt_extrnl_xid IS NULL"
+    #region Fix records with NULL EXTRNL_XID, and empty STDNT_MDL_NAME and HOME_GRP_NAME.
+    Write-Verbose "  Fixing null database values."
+    Invoke-SqlCmd -Hostname localhost -Database AIM -Query "UPDATE STUDENT SET STDNT_EXTRNL_XID = STDNT_XID WHERE STDNT_EXTRNL_XID IS NULL"
+    Invoke-SqlCmd -Hostname localhost -Database AIM -Query "UPDATE STUDENT SET STDNT_MDL_NAME = NULL WHERE STDNT_MDL_NAME = ''" 
+    Invoke-SqlCmd -Hostname localhost -Database AIM -Query "UPDATE STUDENT SET HOME_GRP_NAME = NULL WHERE HOME_GRP_NAME = ''"
     #endregion
 
     #region Get Existing Student Information
