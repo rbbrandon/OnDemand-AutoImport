@@ -96,9 +96,9 @@ powershell.exe -ExecutionPolicy Bypass -Command "& 'c:\scripts\ImportOnDemandUse
 
 # Notes:
 * This script, by default, checks for existing students by matching the student code ("student_code"/"STDNT_XID"), and at least 2 of: "first_name", "surname", and "date_of_birth". To match by "student_code" alone, run the script with the `-SkipExtendedRecordChecks` switch.
-* This script, by default, will only import or modify existing accounts. It will not mark students as "DELETED" unless run with the `-MarkMissingStudentsAsDeleted` switch.
+* This script, by default, will only import new users or modify existing accounts. It will not mark students as "DELETED" unless run with the `-MarkMissingStudentsAsDeleted` switch.
 * If the database has no existing students, the first record will start at "<b>[SCHL_ID]</b>000000<b>1</b>000" (e.g. for a school with an ID of "1337", the first record ID will be "<b>1337</b>000000<b>1</b>000").
-* If piping the output to a log file, the log file will not be coloured, as it's just a text file.
+* If piping the output to a log file, the log file will not be coloured, as it's just a text file. Only console output will be coloured.
 
 # Authors:
 
