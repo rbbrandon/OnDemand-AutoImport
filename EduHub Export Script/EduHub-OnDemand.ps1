@@ -1,10 +1,10 @@
 #************** Enter your school details here ******************************************************************
 
-$DriveLetter = "L:\"		#The path (e.g. "L:\" or "D:\UserCreator\") to copy the output too.
+$DriveLetter = "L:\"		#The path (e.g. "L:\" or "D:\OnDemand\") to copy the output too.
 
 #*******************************************************************************************************
 
-# Pick up school number automaticly.
+# Pick up school number automagically.
 $School_Number = [system.environment]::MachineName.Trim().Substring(0,4)
 
 $StudentFile = "D:\eduHub\ST_" + $School_Number + ".csv"
@@ -13,14 +13,16 @@ $FamilyFile = "D:\eduHub\DF_" + $School_Number + ".csv"
 $FamilyDeltaFile = "D:\eduHub\DF_" + $School_Number + "_D.csv"
 $OutPutFile = $DriveLetter + "OnDemand.csv"
 
-# in order to export the whole school in a multicampus school remove the line "	where-object{$_.CAMPUS -eq "2"}|"
-# This not required in a single campus school or when exporting the campuses separately.
-
+# Check if Delta files exist, and if so, include them.
 $StudentCSVFiles = @($StudentFile)
 if (Test-Path $StudentDeltaFile) { $StudentCSVFiles += $StudentDeltaFile }
 
+$FamilyCSVFiles = @($FamilyFile)
+if (Test-Path $FamilyDeltaFile) { $FamilyCSVFiles += $FamilyDeltaFile }
+
+# Import student eduHub data.
 $StudentCSV = Import-Csv -Path $StudentCSVFiles | 
-	Where-Object { $_.STATUS -eq "ACTV" -or $_.STATUS -eq "FUT" } |
+	Where-Object { $_.STATUS -eq "ACTV" -or $_.STATUS -eq "FUT" -or $_.STATUS -eq "LVNG" } |
     Foreach-Object {$_.LW_DATE = [DateTime]::ParseExact($_.LW_DATE,"d/MM/yyyy h:mm:ss tt", [System.Globalization.CultureInfo]::InvariantCulture); $_} | 
     Group-Object STKEY | 
     Foreach-Object {$_.Group | Sort-Object LW_DATE | Select-Object -Last 1} |
@@ -42,9 +44,7 @@ $StudentCSV = Import-Csv -Path $StudentCSVFiles |
 		@{ Name = "year_level"; Expression = { ($_.SCHOOL_YEAR) } } |
 	Sort-Object -property student_code
 
-$FamilyCSVFiles = @($FamilyFile)
-if (Test-Path $FamilyDeltaFile) { $FamilyCSVFiles += $FamilyDeltaFile }
-
+# Import family eduHub data (for LBOTE calculation)
 $FamilyCSV = Import-Csv -Path $FamilyCSVFiles | 
     Foreach-Object {$_.LW_DATE = [DateTime]::ParseExact($_.LW_DATE,"d/MM/yyyy h:mm:ss tt", [System.Globalization.CultureInfo]::InvariantCulture); $_} | 
     Group-Object DFKEY | 
