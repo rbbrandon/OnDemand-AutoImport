@@ -8,7 +8,7 @@ This script will read a valid (see below) OnDemand Csv Student Import file, chec
 * `NULL` `STDNT_EXTRNL_XID` values are auto-corrected to `STDNT_XID`.
 * Empty `STDNT_MDL_NAME` and `HOME_GRP_NAME` values are corrected to `NULL` (if required).
 * School ID auto-detected, unless you have multiple schools on the same server- if so, school IDs are shown so that you can specify the ID.
-* "P" year levels, are auto-converted to the "F" that OnDemand expects.
+* Auto-cleaning of CSV files- E.g. "P" year levels, are auto-converted to the "F" that OnDemand expects.
 * Ability to mark students *not* in the imported CSV as "DELETED" (disabled by default).
 * Colourised output (if run in a powershell console).
 
