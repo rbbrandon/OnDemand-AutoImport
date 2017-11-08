@@ -483,7 +483,7 @@ Function EndScript {
 Function CheckRecordFail ($Record) {
     $ValidBool        = "0", "N", "No", "F", "False", "1", "Y", "Yes", "T", "True"
     $ValidGenders     = "M", "MALE", "F", "FEMAL", "FEMALE"
-    $ValidYearLevels  = "01", "02", "03", "04", "05", "06", "07", "08", "09", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "F", "P", "UG"
+    $ValidYearLevels  = "00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "F", "P", "UG"
     $ValidationFailed = $false
     $ErrorMsg         = ""
 
@@ -592,6 +592,8 @@ Function Clean-Year ($Value) {
         "8" { "08"; break;}
         "9" { "09"; break;}
         "P" {  "F"; break;}
+        "0" {  "F"; break;}
+        "00" { "F"; break;}
         default { $Value }
     }
 }
