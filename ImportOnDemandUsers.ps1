@@ -11,9 +11,9 @@ student_code,first_name,middle_name,surname,gender,date_of_birth,LBOTE,ATSI,disa
 
 .NOTES
 Author      : Robert Brandon
-Version     : 1.3
+Version     : 1.4
 Created     : 10/10/2017
-Last Edited : 06/11/2017
+Last Edited : 08/11/2017
 Requires    : SQL Server PowerShell Module (SQLPS);
               PowerShell v3.0+;
               Script Run "As Administrator";
