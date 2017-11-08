@@ -115,6 +115,9 @@ powershell.exe -ExecutionPolicy Bypass -Command "& 'c:\scripts\ImportOnDemandUse
 * **Robert Brandon** - *Initial work*
  
 # Changelog:
+## v1.4 (08/11/2017)
+* Bugfix - Fixed ATSI, disability_status, EMA, ESL values being set to the value of LBOTE instead of their respective values.
+
 ## v1.3 (06/11/2017)
 * Fix handling of NULL STDNT_MDL_NAME and HOME_GRP_NAME values to be NULL instead of an empty string.
 
