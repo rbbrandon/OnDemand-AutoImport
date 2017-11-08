@@ -231,10 +231,10 @@ Function Main ($CsvFile, $SchoolID)
 
         # Clean bool values to a "0" or "1".
         $Record.LBOTE             = Clean-Bool $Record.LBOTE
-        $Record.ATSI              = Clean-Bool $Record.LBOTE
-        $Record.disability_status = Clean-Bool $Record.LBOTE
-        $Record.EMA               = Clean-Bool $Record.LBOTE
-        $Record.ESL               = Clean-Bool $Record.LBOTE
+        $Record.ATSI              = Clean-Bool $Record.ATSI
+        $Record.disability_status = Clean-Bool $Record.disability_status
+        $Record.EMA               = Clean-Bool $Record.EMA
+        $Record.ESL               = Clean-Bool $Record.ESL
 
         # Clean gender value to what the DB is expecting ("MALE"/"FEMAL")
         $Record.gender = Clean-Gender $Record.gender
