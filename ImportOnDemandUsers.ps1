@@ -299,8 +299,8 @@ Function Main ($CsvFile, $SchoolID)
             $UpdatedStudentInformation = ""
 
             if ($ExistingStudent.YEAR_LVL_ID -ne $Year_Lvl_Id) {
-                $ExistingStudent.YEAR_LVL_DSCRPTN = $YearLevels | Where-Object { $_.YEAR_LVL_ID -eq $ExistingStudent.YEAR_LVL_ID }  | select -ExpandProperty YEAR_LVL_DSCRPTN
-                $UpdatedStudentInformation += "    - Changing Year Level from ""$($ExistingStudent.YEAR_LVL_DSCRPTN)"" to ""$($Record.year_level)"".`r`n"
+                $ExistingStudent_YEAR_LVL_DSCRPTN = $YearLevels | Where-Object { $_.YEAR_LVL_ID -eq $ExistingStudent.YEAR_LVL_ID }  | select -ExpandProperty YEAR_LVL_DSCRPTN
+                $UpdatedStudentInformation += "    - Changing Year Level from ""$($ExistingStudent_YEAR_LVL_DSCRPTN)"" to ""$($Record.year_level)"".`r`n"
             }
             if ($ExistingStudent.STDNT_FRST_NAME -ne $Record.first_name) {
                 $UpdatedStudentInformation += "    - Changing First Name from ""$($ExistingStudent.STDNT_FRST_NAME)"" to ""$($Record.first_name)"".`r`n"
