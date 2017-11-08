@@ -367,7 +367,7 @@ Function Main ($CsvFile, $SchoolID)
                 Write-Verbose "Executing: $SQLQuery"
 
                 try {
-                    #Invoke-SqlCmd -Hostname localhost -Database AIM -Query $SQLQuery
+                    Invoke-SqlCmd -Hostname localhost -Database AIM -Query $SQLQuery
                     $Updates += 1
                     Write-Green "  - Done."
                 } catch {
