@@ -11,9 +11,9 @@ student_code,first_name,middle_name,surname,gender,date_of_birth,LBOTE,ATSI,disa
 
 .NOTES
 Author      : Robert Brandon
-Version     : 1.4
+Version     : 1.5
 Created     : 10/10/2017
-Last Edited : 08/11/2017
+Last Edited : 13/11/2017
 Requires    : SQL Server PowerShell Module (SQLPS);
               PowerShell v3.0+;
               Script Run "As Administrator";
@@ -208,12 +208,12 @@ Function Main ($CsvFile, $SchoolID)
         #region "Clean" record values for SQL.
         # Prevent SQL Injection:
         $Record | Foreach-Object {
-            $_.first_name = $_.first_name.Replace("'", "").Replace("""", "");
-            $_.middle_name = $_.middle_name.Replace("'", "").Replace("""", "");
-            $_.surname = $_.surname.Replace("'", "").Replace("""", "");
-            $_.student_code = $_.student_code.Replace("'", "").Replace("""", "");
-            $_.home_group = $_.home_group.Replace("'", "").Replace("""", "");
-            $_.year_level = $_.year_level.Replace("'", "").Replace("""", "");
+            $_.first_name   = Clean-String $_.first_name;
+            $_.middle_name  = Clean-String $_.middle_name;
+            $_.surname      = Clean-String $_.surname;
+            $_.student_code = Clean-String $_.student_code;
+            $_.home_group   = Clean-String $_.home_group;
+            $_.year_level   = Clean-String $_.year_level;
         }
 
         # Reformat birthdate into a value compatible with SQL.
@@ -454,7 +454,7 @@ Function Main ($CsvFile, $SchoolID)
 
     if ($MarkMissingStudentsAsDeleted) {
         if ($Deletes -gt 0) {
-            Write-Green "- $Deletes student$(if ($Deletes -ne 1) { "s" }) marked as ""DELETED""."
+            Write-Green "- $Deletes Student$(if ($Deletes -ne 1) { "s" }) marked as ""DELETED""."
         } else {
             Write-Color "- 0 Students marked as ""DELETED""."
         }
@@ -606,6 +606,14 @@ Function Clean-Nullable ($Value) {
     }
 }
 
+Function Clean-String ($Value) {
+    if ([string]::IsNullOrEmpty($Value)) {
+        $Value
+    } else {
+        Remove-StringSpecialCharacter -String $Value -SpecialCharacterToKeep "-","-"," ",".","_"
+    }
+}
+
 Add-Type -TypeDefinition @"
    public enum Colour
    {
@@ -661,6 +669,73 @@ Function Write-Red ($Message) {
 
 Function Write-Green ($Message) {
     Write-Color $Message -Color "DarkGreen"
+}
+
+function Remove-StringSpecialCharacter
+{
+<#
+.SYNOPSIS
+	This function will remove the special character from a string.
+	
+.DESCRIPTION
+	This function will remove the special character from a string.
+	I'm using Unicode Regular Expressions with the following categories
+	\p{L} : any kind of letter from any language.
+	\p{Nd} : a digit zero through nine in any script except ideographic 
+	
+	http://www.regular-expressions.info/unicode.html
+	http://unicode.org/reports/tr18/
+.PARAMETER String
+	Specifies the String on which the special character will be removed
+.SpecialCharacterToKeep
+	Specifies the special character to keep in the output
+.EXAMPLE
+	PS C:\> Remove-StringSpecialCharacter -String "^&*@wow*(&(*&@"
+	wow
+.EXAMPLE
+	PS C:\> Remove-StringSpecialCharacter -String "wow#@!`~)(\|?/}{-_=+*"
+	
+	wow
+.EXAMPLE
+	PS C:\> Remove-StringSpecialCharacter -String "wow#@!`~)(\|?/}{-_=+*" -SpecialCharacterToKeep "*","_","-"
+	wow-_*
+.NOTES
+	Francois-Xavier Cat
+	@lazywinadm
+	www.lazywinadmin.com
+	github.com/lazywinadmin
+#>
+	[CmdletBinding()]
+	param
+	(
+		[Parameter(ValueFromPipeline)]
+		[ValidateNotNullOrEmpty()]
+		[Alias('Text')]
+		[System.String[]]$String,
+		
+		[Alias("Keep")]
+		[String[]]$SpecialCharacterToKeep
+	)
+	PROCESS
+	{
+		IF ($PSBoundParameters["SpecialCharacterToKeep"])
+		{
+			$Regex = "[^\p{L}\p{Nd}"
+			Foreach ($Character in $SpecialCharacterToKeep)
+			{
+				$Regex += "/$character"
+			}
+			
+			$Regex += "]+"
+		} #IF($PSBoundParameters["SpecialCharacterToKeep"])
+		ELSE { $Regex = "[^\p{L}\p{Nd}]+" }
+		
+		FOREACH ($Str in $string)
+		{
+			Write-Verbose -Message "Original String: $Str"
+			$Str -replace $regex, ""
+		}
+	} #PROCESS
 }
 #endregion
 
